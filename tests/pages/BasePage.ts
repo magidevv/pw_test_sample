@@ -19,10 +19,6 @@ class BasePage {
     await this.page.reload();
   }
 
-  public getCurrentUrl(): string {
-    return this.page.url();
-  }
-
   // Element Retrieval Methods
   public getElement(selector: string): Locator {
     return this.page.locator(selector);
@@ -97,10 +93,6 @@ class BasePage {
   }
 
   // Validation Methods
-  public async isUrlMatching(expectedUrl: string | RegExp): Promise<boolean> {
-    return this.getCurrentUrl().match(expectedUrl) !== null;
-  }
-
   public async isVisible(selector: string): Promise<boolean> {
     return await this.getElement(selector).isVisible();
   }
