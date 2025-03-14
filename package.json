@@ -2,7 +2,18 @@
   "name": "test_sample",
   "version": "1.0.0",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "test:all": "playwright test",
+    "test:login": "playwright test tests/login.spec.ts",
+    "test:headed": "playwright test --headed",
+    "test:firefox": "playwright test --project=firefox",
+    "test:firefox:headed": "playwright test --project=firefox --headed",
+    "test:webkit": "playwright test --project=webkit",
+    "test:webkit:headed": "playwright test --project=webkit --headed",
+    "test:chromium": "playwright test --project=chromium",
+    "test:chromium:headed": "playwright test --project=chromium --headed",
+    "test:allure": "allure generate test-results --clean && allure open"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -10,7 +21,9 @@
   "devDependencies": {
     "@playwright/test": "^1.51.0",
     "@types/dotenv": "^8.2.3",
-    "@types/node": "^22.13.9"
+    "@types/node": "^22.13.9",
+    "allure-commandline": "^2.33.0",
+    "allure-playwright": "^3.2.0"
   },
   "dependencies": {
     "dotenv": "^16.4.7"
