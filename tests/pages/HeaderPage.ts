@@ -1,7 +1,8 @@
 import { Page } from "@playwright/test";
 import BasePage from "./BasePage";
 
-const loginLink = "a.login";
+const signInLink = "a.login";
+const registerLink = "a.register";
 const loggedAsUserLink = "div#loggedas a.user.active";
 const myAccountLink = "div#loggedas a.my-account";
 const logoutLink = "a.logout";
@@ -11,12 +12,12 @@ export class HeaderPage extends BasePage {
     super(page);
   }
 
-  public get loginLink() {
-    return this.getElement(loginLink);
+  public get signInLink() {
+    return this.getElement(signInLink);
   }
 
-  public async clickLoginLink(): Promise<void> {
-    await this.click(loginLink);
+  public async clickSignInLink(): Promise<void> {
+    await this.click(signInLink);
   }
 
   public get loggedAsUserLink() {
@@ -41,5 +42,13 @@ export class HeaderPage extends BasePage {
 
   public async clickLogoutLink(): Promise<void> {
     await this.click(logoutLink);
+  }
+
+  public get registerLink() {
+    return this.getElement(registerLink);
+  }
+
+  public async clickRegisterLink(): Promise<void> {
+    await this.click(registerLink);
   }
 }
