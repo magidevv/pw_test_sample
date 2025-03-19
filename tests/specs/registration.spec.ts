@@ -9,10 +9,23 @@ import { messages, errorMessages } from "../../utils/messages";
 import { invalidEmailFormats } from "../../utils/data";
 
 test.describe("Registration functionality", () => {
-  // Open the main page
-  test.beforeEach(async ({ mainPage }) => {
-    await mainPage.navigateTo("");
-  });
+  let userData: ReturnType<typeof generateUser>; // User data
+
+  // Fill the registration form with valid data
+  const fillValidRegistrationForm = async (page: any) => {
+    await page.fillRegistrationForm(
+      userData.login,
+      userData.password,
+      userData.password,
+      userData.firstName,
+      userData.lastName,
+      userData.email,
+      true,
+      userData.organization,
+      userData.location,
+      userData.irc
+    );
+  };
 
   test("should allow user to registrate with valid credentials", async ({
     page,
@@ -20,6 +33,8 @@ test.describe("Registration functionality", () => {
     registerPage,
     loginPage,
   }) => {
+    await headerPage.navigateTo(""); // Open the main page
+
     await test.step("Verify registration link is visible", async () => {
       await expect(headerPage.registerLink).toBeVisible();
     });
@@ -48,7 +63,7 @@ test.describe("Registration functionality", () => {
       await expect(registerPage.languageSelector).toHaveValue("en");
     });
 
-    const userData = generateUser();
+    userData = generateUser(); // Generate new user data
 
     await test.step("Fill registration form", async () => {
       test.info().attach("Generated User Data", {
@@ -56,18 +71,7 @@ test.describe("Registration functionality", () => {
         contentType: "application/json",
       });
 
-      await registerPage.fillRegistrationForm(
-        userData.login,
-        userData.password,
-        userData.password,
-        userData.firstName,
-        userData.lastName,
-        userData.email,
-        true,
-        userData.organization,
-        userData.location,
-        userData.irc
-      );
+      await fillValidRegistrationForm(registerPage);
     });
 
     await test.step("Submit registration form", async () => {
@@ -83,630 +87,301 @@ test.describe("Registration functionality", () => {
     });
   });
 
-  test("should show error message when 'Login' field is filled with invalid data", async ({
-    page,
-    headerPage,
-    registerPage,
-  }) => {
-    await test.step("Click registration link", async () => {
-      await headerPage.clickRegisterLink();
-      await expect(page).toHaveURL(/\/account\/register/);
-    });
-
-    const userData = generateUser();
-
-    await test.step("Fill all fields except the 'Login' field with valid data", async () => {
-      await registerPage.fillRegistrationForm(
-        "",
-        userData.password,
-        userData.password,
-        userData.firstName,
-        userData.lastName,
-        userData.email,
-        true,
-        "",
-        "",
-        ""
-      );
-    });
-
-    await test.step("Submit registration form", async () => {
-      await registerPage.clickSubmitButton();
-    });
-
-    await test.step("Verify error message", async () => {
-      await expect(registerPage.errorMessage).toBeVisible();
-      await expect(registerPage.errorMessage).toHaveText(
-        errorMessages.en.blankLogin
-      );
-    });
-
-    await test.step("Verify 'Login' field and its label are highlighted in red", async () => {
-      await expect(registerPage.loginLabel).toHaveCSS(
-        "color",
-        "rgb(187, 0, 0)"
-      );
-      await expect(registerPage.loginField).toHaveCSS(
-        "border-color",
-        "rgb(187, 0, 0)"
-      );
-    });
-
-    await test.step("Fill 'Password' and 'Confirmation' fields with valid data and 'Login' field with long string", async () => {
-      await registerPage.fillPasswordField(userData.password);
-      await registerPage.fillPasswordConfirmationField(userData.password);
-      await registerPage.fillLoginField(randomString(61));
-    });
-
-    await test.step("Submit registration form", async () => {
-      await registerPage.clickSubmitButton();
-    });
-
-    await test.step("Verify error message", async () => {
-      await expect(registerPage.errorMessage).toBeVisible();
-      await expect(registerPage.errorMessage).toHaveText(
-        errorMessages.en.longLogin
-      );
-    });
-
-    await test.step("Verify 'Login' field and its label are highlighted in red", async () => {
-      await expect(registerPage.loginLabel).toHaveCSS(
-        "color",
-        "rgb(187, 0, 0)"
-      );
-      await expect(registerPage.loginField).toHaveCSS(
-        "border-color",
-        "rgb(187, 0, 0)"
-      );
-    });
-
-    await test.step("Fill 'Password' and 'Confirmation' fields with valid data and 'Login' field with symbols", async () => {
-      await registerPage.fillPasswordField(userData.password);
-      await registerPage.fillPasswordConfirmationField(userData.password);
-      await registerPage.fillLoginField(randomSymbols(5));
-    });
-
-    await test.step("Submit registration form", async () => {
-      await registerPage.clickSubmitButton();
-    });
-
-    await test.step("Verify error message", async () => {
-      await expect(registerPage.errorMessage).toBeVisible();
-      await expect(registerPage.errorMessage).toHaveText(
-        errorMessages.en.invalidLogin
-      );
-    });
-
-    await test.step("Verify 'Login' field and its label are highlighted in red", async () => {
-      await expect(registerPage.loginLabel).toHaveCSS(
-        "color",
-        "rgb(187, 0, 0)"
-      );
-      await expect(registerPage.loginField).toHaveCSS(
-        "border-color",
-        "rgb(187, 0, 0)"
-      );
-    });
-
-    await test.step("Fill 'Password' and 'Confirmation' fields with valid data and 'Login' field with spaces", async () => {
-      await registerPage.fillPasswordField(userData.password);
-      await registerPage.fillPasswordConfirmationField(userData.password);
-      await registerPage.fillLoginField("     ");
-    });
-
-    await test.step("Submit registration form", async () => {
-      await registerPage.clickSubmitButton();
-    });
-
-    await test.step("Verify error messages", async () => {
-      const errors = await registerPage.errorMessage.all();
-
-      for (const error of errors) {
-        await expect(error).toBeVisible();
-      }
-
-      await expect(registerPage.errorMessage).toHaveText([
-        errorMessages.en.blankLogin,
-        errorMessages.en.invalidLogin,
-      ]);
-    });
-
-    await test.step("Verify 'Login' field and its label are highlighted in red", async () => {
-      await expect(registerPage.loginLabel).toHaveCSS(
-        "color",
-        "rgb(187, 0, 0)"
-      );
-      await expect(registerPage.loginField).toHaveCSS(
-        "border-color",
-        "rgb(187, 0, 0)"
-      );
-    });
-
-    await test.step("Fill 'Password' and 'Confirmation' fields with valid data and 'Login' field with leading/trailing spaces", async () => {
-      await registerPage.fillPasswordField(userData.password);
-      await registerPage.fillPasswordConfirmationField(userData.password);
-      await registerPage.fillLoginField(" " + userData.login + " ");
-    });
-
-    await test.step("Submit registration form", async () => {
-      await registerPage.clickSubmitButton();
-    });
-
-    await test.step("Verify error message", async () => {
-      await expect(registerPage.errorMessage).toBeVisible();
-      await expect(registerPage.errorMessage).toHaveText(
-        errorMessages.en.invalidLogin
-      );
-    });
-
-    await test.step("Verify 'Login' field and its label are highlighted in red", async () => {
-      await expect(registerPage.loginLabel).toHaveCSS(
-        "color",
-        "rgb(187, 0, 0)"
-      );
-      await expect(registerPage.loginField).toHaveCSS(
-        "border-color",
-        "rgb(187, 0, 0)"
-      );
-    });
-  });
-
-  test("should show error message when 'Password' field is filled with invalid data", async ({
-    page,
-    headerPage,
-    registerPage,
-  }) => {
-    await test.step("Click registration link", async () => {
-      await headerPage.clickRegisterLink();
-      await expect(page).toHaveURL(/\/account\/register/);
-    });
-
-    const userData = generateUser();
-
-    await test.step("Fill all fields except the 'Password' field with valid data", async () => {
-      await registerPage.fillRegistrationForm(
-        userData.login,
-        "",
-        "",
-        userData.firstName,
-        userData.lastName,
-        userData.email,
-        true,
-        "",
-        "",
-        ""
-      );
-    });
-
-    await test.step("Submit registration form", async () => {
-      await registerPage.clickSubmitButton();
-    });
-
-    await test.step("Verify error message", async () => {
-      await expect(registerPage.errorMessage).toBeVisible();
-      await expect(registerPage.errorMessage).toHaveText(
-        errorMessages.en.shortPassword
-      );
-    });
-
-    await test.step("Verify 'Password' field and its label are highlighted in red", async () => {
-      await expect(registerPage.passwordLabel).toHaveCSS(
-        "color",
-        "rgb(187, 0, 0)"
-      );
-      await expect(registerPage.passwordField).toHaveCSS(
-        "border-color",
-        "rgb(187, 0, 0)"
-      );
-    });
-
-    await test.step("Fill 'Confirmation' field with valid data and 'Password' field with short string", async () => {
-      const shortPassword = randomString(7);
-      await registerPage.fillPasswordConfirmationField(shortPassword);
-      await registerPage.fillPasswordField(shortPassword);
-    });
-
-    await test.step("Submit registration form", async () => {
-      await registerPage.clickSubmitButton();
-    });
-
-    await test.step("Verify error message", async () => {
-      await expect(registerPage.errorMessage).toBeVisible();
-      await expect(registerPage.errorMessage).toHaveText(
-        errorMessages.en.shortPassword
-      );
-    });
-
-    await test.step("Verify 'Password' field and its label are highlighted in red", async () => {
-      await expect(registerPage.passwordLabel).toHaveCSS(
-        "color",
-        "rgb(187, 0, 0)"
-      );
-      await expect(registerPage.passwordField).toHaveCSS(
-        "border-color",
-        "rgb(187, 0, 0)"
-      );
-    });
-  });
-
-  test("should show error message when 'Confirmation' field does not match the password", async ({
-    page,
-    headerPage,
-    registerPage,
-  }) => {
-    await test.step("Click registration link", async () => {
-      await headerPage.clickRegisterLink();
-      await expect(page).toHaveURL(/\/account\/register/);
-    });
-
-    const userData = generateUser();
-
-    await test.step("Fill all fields except the 'Confirmation' field with valid data", async () => {
-      await registerPage.fillRegistrationForm(
-        userData.login,
-        userData.password,
-        "",
-        userData.firstName,
-        userData.lastName,
-        userData.email,
-        true,
-        "",
-        "",
-        ""
-      );
-    });
-
-    await test.step("Submit registration form", async () => {
-      await registerPage.clickSubmitButton();
-    });
-
-    await test.step("Verify error message", async () => {
-      await expect(registerPage.errorMessage).toBeVisible();
-      await expect(registerPage.errorMessage).toHaveText(
-        errorMessages.en.confirmationMismatch
-      );
-    });
-
-    await test.step("Verify 'Password' field and its label are highlighted in red", async () => {
-      await expect(registerPage.passwordLabel).toHaveCSS(
-        "color",
-        "rgb(187, 0, 0)"
-      );
-      await expect(registerPage.passwordField).toHaveCSS(
-        "border-color",
-        "rgb(187, 0, 0)"
-      );
-    });
-
-    await test.step("Fill 'Password' and 'Confirmation' fields with different data", async () => {
-      await registerPage.fillPasswordField(userData.password);
-      await registerPage.fillPasswordConfirmationField(randomString(10));
-    });
-
-    await test.step("Submit registration form", async () => {
-      await registerPage.clickSubmitButton();
-    });
-
-    await test.step("Verify error message", async () => {
-      await expect(registerPage.errorMessage).toBeVisible();
-      await expect(registerPage.errorMessage).toHaveText(
-        errorMessages.en.confirmationMismatch
-      );
-    });
-
-    await test.step("Verify 'Password' field and its label are highlighted in red", async () => {
-      await expect(registerPage.passwordLabel).toHaveCSS(
-        "color",
-        "rgb(187, 0, 0)"
-      );
-      await expect(registerPage.passwordField).toHaveCSS(
-        "border-color",
-        "rgb(187, 0, 0)"
-      );
-    });
-  });
-
-  test("should show error message when 'First name' field is filled with invalid data", async ({
-    page,
-    headerPage,
-    registerPage,
-  }) => {
-    await test.step("Click registration link", async () => {
-      await headerPage.clickRegisterLink();
-      await expect(page).toHaveURL(/\/account\/register/);
-    });
-
-    const userData = generateUser();
-
-    await test.step("Fill all fields except the 'First name' field with valid data", async () => {
-      await registerPage.fillRegistrationForm(
-        userData.login,
-        userData.password,
-        userData.password,
-        "",
-        userData.lastName,
-        userData.email,
-        true,
-        "",
-        "",
-        ""
-      );
-    });
-
-    await test.step("Submit registration form", async () => {
-      await registerPage.clickSubmitButton();
-    });
-
-    await test.step("Verify error message", async () => {
-      await expect(registerPage.errorMessage).toBeVisible();
-      await expect(registerPage.errorMessage).toHaveText(
-        errorMessages.en.blankFirstName
-      );
-    });
-
-    await test.step("Verify 'First name' field and its label are highlighted in red", async () => {
-      await expect(registerPage.firstNameLabel).toHaveCSS(
-        "color",
-        "rgb(187, 0, 0)"
-      );
-      await expect(registerPage.firstNameField).toHaveCSS(
-        "border-color",
-        "rgb(187, 0, 0)"
-      );
-    });
-
-    await test.step("Fill 'Password' and 'Confirmation' fields with valid data and 'First name' field with long string", async () => {
-      await registerPage.fillPasswordField(userData.password);
-      await registerPage.fillPasswordConfirmationField(userData.password);
-      await registerPage.fillFirstNameField(randomString(31));
-    });
-
-    await test.step("Submit registration form", async () => {
-      await registerPage.clickSubmitButton();
-    });
-
-    await test.step("Verify error message", async () => {
-      await expect(registerPage.errorMessage).toBeVisible();
-      await expect(registerPage.errorMessage).toHaveText(
-        errorMessages.en.longFirstName
-      );
-    });
-
-    await test.step("Verify 'First name' field and its label are highlighted in red", async () => {
-      await expect(registerPage.firstNameLabel).toHaveCSS(
-        "color",
-        "rgb(187, 0, 0)"
-      );
-      await expect(registerPage.firstNameField).toHaveCSS(
-        "border-color",
-        "rgb(187, 0, 0)"
-      );
-    });
-
-    await test.step("Fill 'Password' and 'Confirmation' fields with valid data and 'First name' field with spaces", async () => {
-      await registerPage.fillPasswordField(userData.password);
-      await registerPage.fillPasswordConfirmationField(userData.password);
-      await registerPage.fillFirstNameField("     ");
-    });
-
-    await test.step("Submit registration form", async () => {
-      await registerPage.clickSubmitButton();
-    });
-
-    await test.step("Verify error message", async () => {
-      await expect(registerPage.errorMessage).toBeVisible();
-      await expect(registerPage.errorMessage).toHaveText(
-        errorMessages.en.blankFirstName
-      );
-    });
-
-    await test.step("Verify 'First name' field and its label are highlighted in red", async () => {
-      await expect(registerPage.firstNameLabel).toHaveCSS(
-        "color",
-        "rgb(187, 0, 0)"
-      );
-      await expect(registerPage.firstNameField).toHaveCSS(
-        "border-color",
-        "rgb(187, 0, 0)"
-      );
-    });
-  });
-
-  test("should show error message when 'Last name' field is filled with invalid data", async ({
-    page,
-    headerPage,
-    registerPage,
-  }) => {
-    await test.step("Click registration link", async () => {
-      await headerPage.clickRegisterLink();
-      await expect(page).toHaveURL(/\/account\/register/);
-    });
-
-    const userData = generateUser();
-
-    await test.step("Fill all fields except the 'Last name' field with valid data", async () => {
-      await registerPage.fillRegistrationForm(
-        userData.login,
-        userData.password,
-        userData.password,
-        userData.firstName,
-        "",
-        userData.email,
-        true,
-        "",
-        "",
-        ""
-      );
-    });
-
-    await test.step("Submit registration form", async () => {
-      await registerPage.clickSubmitButton();
-    });
-
-    await test.step("Verify error message", async () => {
-      await expect(registerPage.errorMessage).toBeVisible();
-      await expect(registerPage.errorMessage).toHaveText(
-        errorMessages.en.blankLastName
-      );
-    });
-
-    await test.step("Verify 'Last name' field and its label are highlighted in red", async () => {
-      await expect(registerPage.lastNameLabel).toHaveCSS(
-        "color",
-        "rgb(187, 0, 0)"
-      );
-      await expect(registerPage.lastNameField).toHaveCSS(
-        "border-color",
-        "rgb(187, 0, 0)"
-      );
-    });
-
-    await test.step("Fill 'Password' and 'Confirmation' fields with valid data and 'Last name' field with long string", async () => {
-      await registerPage.fillPasswordField(userData.password);
-      await registerPage.fillPasswordConfirmationField(userData.password);
-      await registerPage.fillLastNameField(randomString(31));
-    });
-
-    await test.step("Submit registration form", async () => {
-      await registerPage.clickSubmitButton();
-    });
-
-    await test.step("Verify error message", async () => {
-      await expect(registerPage.errorMessage).toBeVisible();
-      await expect(registerPage.errorMessage).toHaveText(
-        errorMessages.en.longLastName
-      );
-    });
-
-    await test.step("Verify 'Last name' field and its label are highlighted in red", async () => {
-      await expect(registerPage.lastNameLabel).toHaveCSS(
-        "color",
-        "rgb(187, 0, 0)"
-      );
-      await expect(registerPage.lastNameField).toHaveCSS(
-        "border-color",
-        "rgb(187, 0, 0)"
-      );
-    });
-
-    await test.step("Fill 'Password' and 'Confirmation' fields with valid data and 'Last name' field with spaces", async () => {
-      await registerPage.fillPasswordField(userData.password);
-      await registerPage.fillPasswordConfirmationField(userData.password);
-      await registerPage.fillLastNameField("     ");
-    });
-
-    await test.step("Submit registration form", async () => {
-      await registerPage.clickSubmitButton();
-    });
-
-    await test.step("Verify error message", async () => {
-      await expect(registerPage.errorMessage).toBeVisible();
-      await expect(registerPage.errorMessage).toHaveText(
-        errorMessages.en.blankLastName
-      );
-    });
-
-    await test.step("Verify 'Last name' field and its label are highlighted in red", async () => {
-      await expect(registerPage.lastNameLabel).toHaveCSS(
-        "color",
-        "rgb(187, 0, 0)"
-      );
-      await expect(registerPage.lastNameField).toHaveCSS(
-        "border-color",
-        "rgb(187, 0, 0)"
-      );
-    });
-  });
-
-  test("should show error message when 'Email' field is filled with invalid data", async ({
-    page,
-    headerPage,
-    registerPage,
-  }) => {
-    await test.step("Click registration link", async () => {
-      await headerPage.clickRegisterLink();
-      await expect(page).toHaveURL(/\/account\/register/);
-    });
-
-    const userData = generateUser();
-
-    await test.step("Fill all fields except the 'Email' field with valid data", async () => {
-      await registerPage.fillRegistrationForm(
-        userData.login,
-        userData.password,
-        userData.password,
-        userData.firstName,
-        userData.lastName,
-        "",
-        true,
-        "",
-        "",
-        ""
-      );
-    });
-
-    await test.step("Submit registration form", async () => {
-      await registerPage.clickSubmitButton();
-    });
-
-    await test.step("Verify error message", async () => {
-      await expect(registerPage.errorMessage).toBeVisible();
-      await expect(registerPage.errorMessage).toHaveText(
-        errorMessages.en.blankEmail
-      );
-    });
-
-    await test.step("Fill 'Password' and 'Confirmation' fields with valid data and 'Email' field with long string", async () => {
-      await registerPage.fillPasswordField(userData.password);
-      await registerPage.fillPasswordConfirmationField(userData.password);
-      await registerPage.fillEmailField(randomString(61) + "@domain.com");
-    });
-
-    await test.step("Submit registration form", async () => {
-      await registerPage.clickSubmitButton();
-    });
-
-    await test.step("Verify error message", async () => {
-      await expect(registerPage.errorMessage).toBeVisible();
-      await expect(registerPage.errorMessage).toHaveText(
-        errorMessages.en.longEmail
-      );
-    });
-
-    for (const invalidEmail of invalidEmailFormats) {
-      await test.step("Fill 'Password' and 'Confirmation' fields with valid data and 'Email' field with invalid email formats", async () => {
-        await registerPage.fillPasswordField(userData.password);
-        await registerPage.fillPasswordConfirmationField(userData.password);
-        await registerPage.fillEmailField(invalidEmail);
-      });
-
-      await test.step("Submit registration form", async () => {
+  test.describe("Registration with invalid data", () => {
+    test.beforeEach(async ({ registerPage }) => {
+      await registerPage.navigateTo("account/register"); // Open the registration page
+      userData = generateUser(); // Generate new user data for each test
+      await fillValidRegistrationForm(registerPage); // Fill the registration form with valid data
+    });
+
+    const fillPasswordFields = async (page: any) => {
+      await page.fillPasswordField(userData.password);
+      await page.fillPasswordConfirmationField(userData.password);
+    };
+
+    const redColor = "rgb(187, 0, 0)";
+
+    test("should show error message when 'Login' field is filled with invalid data", async ({
+      registerPage,
+    }) => {
+      await test.step("Verify error message when 'Login' field is empty", async () => {
+        await registerPage.fillLoginField("");
         await registerPage.clickSubmitButton();
-      });
 
-      await test.step("Verify error message", async () => {
         await expect(registerPage.errorMessage).toBeVisible();
         await expect(registerPage.errorMessage).toHaveText(
-          errorMessages.en.invalidEmail
+          errorMessages.en.blankLogin
+        );
+        await expect(registerPage.loginLabel).toHaveCSS("color", redColor);
+        await expect(registerPage.loginField).toHaveCSS(
+          "border-color",
+          redColor
         );
       });
-    }
 
-    await test.step("Fill 'Password' and 'Confirmation' fields with valid data and 'Email' field with spaces", async () => {
-      await registerPage.fillPasswordField(userData.password);
-      await registerPage.fillPasswordConfirmationField(userData.password);
-      await registerPage.fillEmailField("     ");
+      await test.step("Verify error message when login is too long", async () => {
+        await fillPasswordFields(registerPage);
+        await registerPage.fillLoginField(randomString(61));
+        await registerPage.clickSubmitButton();
+
+        await expect(registerPage.errorMessage).toBeVisible();
+        await expect(registerPage.errorMessage).toHaveText(
+          errorMessages.en.longLogin
+        );
+        await expect(registerPage.loginLabel).toHaveCSS("color", redColor);
+        await expect(registerPage.loginField).toHaveCSS(
+          "border-color",
+          redColor
+        );
+      });
+
+      await test.step("Verify error message when login contains symbols", async () => {
+        await fillPasswordFields(registerPage);
+        await registerPage.fillLoginField(randomSymbols(5));
+        await registerPage.clickSubmitButton();
+
+        await expect(registerPage.errorMessage).toBeVisible();
+        await expect(registerPage.errorMessage).toHaveText(
+          errorMessages.en.invalidLogin
+        );
+        await expect(registerPage.loginLabel).toHaveCSS("color", redColor);
+        await expect(registerPage.loginField).toHaveCSS(
+          "border-color",
+          redColor
+        );
+      });
+
+      await test.step("Verify multiple error messages when login contains only spaces", async () => {
+        await fillPasswordFields(registerPage);
+        await registerPage.fillLoginField("     ");
+        await registerPage.clickSubmitButton();
+
+        const errors = await registerPage.errorMessage.all();
+        for (const error of errors) {
+          await expect(error).toBeVisible();
+        }
+
+        await expect(registerPage.errorMessage).toHaveText([
+          errorMessages.en.blankLogin,
+          errorMessages.en.invalidLogin,
+        ]);
+        await expect(registerPage.loginLabel).toHaveCSS("color", redColor);
+        await expect(registerPage.loginField).toHaveCSS(
+          "border-color",
+          redColor
+        );
+      });
+
+      await test.step("Verify error message when login has leading/trailing spaces", async () => {
+        await fillPasswordFields(registerPage);
+        await registerPage.fillLoginField(" " + userData.login + " ");
+        await registerPage.clickSubmitButton();
+
+        await expect(registerPage.errorMessage).toBeVisible();
+        await expect(registerPage.errorMessage).toHaveText(
+          errorMessages.en.invalidLogin
+        );
+        await expect(registerPage.loginLabel).toHaveCSS("color", redColor);
+        await expect(registerPage.loginField).toHaveCSS(
+          "border-color",
+          redColor
+        );
+      });
     });
 
-    await test.step("Submit registration form", async () => {
-      await registerPage.clickSubmitButton();
+    test("should show error message when 'Password' field is filled with invalid data", async ({
+      registerPage,
+    }) => {
+      await test.step("Verify error message when 'Password' and 'Confirmartion' fields are empty", async () => {
+        await registerPage.fillPasswordField("");
+        await registerPage.fillPasswordConfirmationField("");
+        await registerPage.clickSubmitButton();
+        await expect(registerPage.errorMessage).toBeVisible();
+        await expect(registerPage.errorMessage).toHaveText(
+          errorMessages.en.shortPassword
+        );
+        await expect(registerPage.passwordLabel).toHaveCSS("color", redColor);
+        await expect(registerPage.passwordField).toHaveCSS(
+          "border-color",
+          redColor
+        );
+      });
+
+      await test.step("Verify error message when password is too short", async () => {
+        const shortPassword = randomString(7);
+        await registerPage.fillPasswordConfirmationField(shortPassword);
+        await registerPage.fillPasswordField(shortPassword);
+        await registerPage.clickSubmitButton();
+        await expect(registerPage.errorMessage).toBeVisible();
+        await expect(registerPage.errorMessage).toHaveText(
+          errorMessages.en.shortPassword
+        );
+        await expect(registerPage.passwordLabel).toHaveCSS("color", redColor);
+        await expect(registerPage.passwordField).toHaveCSS(
+          "border-color",
+          redColor
+        );
+      });
     });
 
-    await test.step("Verify error message", async () => {
-      await expect(registerPage.errorMessage).toBeVisible();
-      await expect(registerPage.errorMessage).toHaveText(
-        errorMessages.en.blankEmail
-      );
+    test("should show error message when 'Confirmation' field does not match the password", async ({
+      registerPage,
+    }) => {
+      await test.step("Verify error message when password and confirmation password are different", async () => {
+        await registerPage.fillPasswordField(userData.password);
+        await registerPage.fillPasswordConfirmationField(randomString(10));
+        await registerPage.clickSubmitButton();
+        await expect(registerPage.errorMessage).toBeVisible();
+        await expect(registerPage.errorMessage).toHaveText(
+          errorMessages.en.confirmationMismatch
+        );
+        await expect(registerPage.passwordLabel).toHaveCSS("color", redColor);
+        await expect(registerPage.passwordField).toHaveCSS(
+          "border-color",
+          redColor
+        );
+      });
+    });
+
+    test("should show error message when 'First name' field is filled with invalid data", async ({
+      registerPage,
+    }) => {
+      await test.step("Verify error message when 'First name' field is empty", async () => {
+        await registerPage.fillFirstNameField("");
+        await registerPage.clickSubmitButton();
+        await expect(registerPage.errorMessage).toBeVisible();
+        await expect(registerPage.errorMessage).toHaveText(
+          errorMessages.en.blankFirstName
+        );
+        await expect(registerPage.firstNameLabel).toHaveCSS("color", redColor);
+        await expect(registerPage.firstNameField).toHaveCSS(
+          "border-color",
+          redColor
+        );
+      });
+
+      await test.step("Verify error message when first name is too long", async () => {
+        await fillPasswordFields(registerPage);
+        await registerPage.fillFirstNameField(randomString(31));
+        await registerPage.clickSubmitButton();
+        await expect(registerPage.errorMessage).toBeVisible();
+        await expect(registerPage.errorMessage).toHaveText(
+          errorMessages.en.longFirstName
+        );
+        await expect(registerPage.firstNameLabel).toHaveCSS("color", redColor);
+        await expect(registerPage.firstNameField).toHaveCSS(
+          "border-color",
+          redColor
+        );
+      });
+
+      await test.step("Verify error message when first name contains only spaces", async () => {
+        await fillPasswordFields(registerPage);
+        await registerPage.fillFirstNameField("     ");
+        await registerPage.clickSubmitButton();
+        await expect(registerPage.errorMessage).toBeVisible();
+        await expect(registerPage.errorMessage).toHaveText(
+          errorMessages.en.blankFirstName
+        );
+        await expect(registerPage.firstNameLabel).toHaveCSS("color", redColor);
+        await expect(registerPage.firstNameField).toHaveCSS(
+          "border-color",
+          redColor
+        );
+      });
+    });
+
+    test("should show error message when 'Last name' field is filled with invalid data", async ({
+      registerPage,
+    }) => {
+      await test.step("Verify error message when 'Last name' field is empty", async () => {
+        await registerPage.fillLastNameField("");
+        await registerPage.clickSubmitButton();
+        await expect(registerPage.errorMessage).toBeVisible();
+        await expect(registerPage.errorMessage).toHaveText(
+          errorMessages.en.blankLastName
+        );
+        await expect(registerPage.lastNameLabel).toHaveCSS("color", redColor);
+        await expect(registerPage.lastNameField).toHaveCSS(
+          "border-color",
+          redColor
+        );
+      });
+
+      await test.step("Verify error message when last name is too long", async () => {
+        await fillPasswordFields(registerPage);
+        await registerPage.fillLastNameField(randomString(31));
+        await registerPage.clickSubmitButton();
+        await expect(registerPage.errorMessage).toBeVisible();
+        await expect(registerPage.errorMessage).toHaveText(
+          errorMessages.en.longLastName
+        );
+        await expect(registerPage.lastNameLabel).toHaveCSS("color", redColor);
+        await expect(registerPage.lastNameField).toHaveCSS(
+          "border-color",
+          redColor
+        );
+      });
+
+      await test.step("Verify error message when last name contains only spaces", async () => {
+        await fillPasswordFields(registerPage);
+        await registerPage.fillLastNameField("     ");
+        await registerPage.clickSubmitButton();
+        await expect(registerPage.errorMessage).toBeVisible();
+        await expect(registerPage.errorMessage).toHaveText(
+          errorMessages.en.blankLastName
+        );
+        await expect(registerPage.lastNameLabel).toHaveCSS("color", redColor);
+        await expect(registerPage.lastNameField).toHaveCSS(
+          "border-color",
+          redColor
+        );
+      });
+    });
+
+    test("should show error message when 'Email' field is filled with invalid data", async ({
+      registerPage,
+    }) => {
+      await test.step("Verify error when 'Email' field is empty", async () => {
+        await registerPage.fillEmailField("");
+        await registerPage.clickSubmitButton();
+        await expect(registerPage.errorMessage).toBeVisible();
+        await expect(registerPage.errorMessage).toHaveText(
+          errorMessages.en.blankEmail
+        );
+      });
+
+      await test.step("Verify error when email is too long", async () => {
+        await registerPage.fillEmailField(randomString(61) + "@domain.com");
+        await fillPasswordFields(registerPage);
+        await registerPage.clickSubmitButton();
+        await expect(registerPage.errorMessage).toBeVisible();
+        await expect(registerPage.errorMessage).toHaveText(
+          errorMessages.en.longEmail
+        );
+      });
+
+      for (const invalidEmail of invalidEmailFormats) {
+        await test.step(`Verify error when email has invalid format: ${invalidEmail}`, async () => {
+          await registerPage.fillEmailField(invalidEmail);
+          await fillPasswordFields(registerPage);
+          await registerPage.clickSubmitButton();
+          await expect(registerPage.errorMessage).toBeVisible();
+          await expect(registerPage.errorMessage).toHaveText(
+            errorMessages.en.invalidEmail
+          );
+        });
+      }
+
+      await test.step("Verify error when email contains only spaces", async () => {
+        await registerPage.fillEmailField("     ");
+        await fillPasswordFields(registerPage);
+        await registerPage.clickSubmitButton();
+        await expect(registerPage.errorMessage).toBeVisible();
+        await expect(registerPage.errorMessage).toHaveText(
+          errorMessages.en.blankEmail
+        );
+      });
     });
   });
 });
