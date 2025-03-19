@@ -4,8 +4,9 @@
   "main": "index.js",
   "scripts": {
     "test:all": "playwright test",
-    "test:login": "playwright test tests/login.spec.ts",
-    "test:headed": "playwright test --headed",
+    "test:login": "playwright test tests/specs/login.spec.ts",
+    "test:registration": "playwright test tests/specs/registration.spec.ts",
+    "test:all:headed": "playwright test --headed",
     "test:firefox": "playwright test --project=firefox",
     "test:firefox:headed": "playwright test --project=firefox --headed",
     "test:webkit": "playwright test --project=webkit",
@@ -19,6 +20,7 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "@faker-js/faker": "^9.6.0",
     "@playwright/test": "^1.51.0",
     "@types/dotenv": "^8.2.3",
     "@types/node": "^22.13.9",
