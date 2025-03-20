@@ -13,7 +13,9 @@
     "test:webkit:headed": "playwright test --project=webkit --headed",
     "test:chromium": "playwright test --project=chromium",
     "test:chromium:headed": "playwright test --project=chromium --headed",
-    "test:allure": "allure generate test-results --clean && allure open"
+    "test:allure": "allure generate test-results --clean",
+    "test:allure:serve": "allure serve test-results",
+    "test:allure:open": "npx http-server allure-report -p 4000"
   },
   "keywords": [],
   "author": "",
