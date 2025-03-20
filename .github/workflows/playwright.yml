@@ -58,3 +58,5 @@ jobs:
           git add .
           git commit -m "Update Allure report"
           git push --force origin report
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
