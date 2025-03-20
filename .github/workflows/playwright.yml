@@ -12,6 +12,16 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    env:
+      BASE_URL: ${{ vars.BASE_URL }}
+      TEST_USER: ${{ secrets.TEST_USER }}
+      TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+      TEST_FIRST_NAME: ${{ secrets.TEST_FIRST_NAME }}
+      TEST_LAST_NAME: ${{ secrets.TEST_LAST_NAME }}
+      TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
+      TEST_IRC: ${{ secrets.TEST_IRC }}
+      TEST_REGISTERED_ON: ${{ secrets.TEST_REGISTERED_ON }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
